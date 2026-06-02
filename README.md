@@ -36,6 +36,13 @@ End-to-end document ingestion and search pipeline running entirely inside Snowfl
                    ▼
          Cortex Search Service
        (hybrid keyword + semantic)
+                   │
+                   ▼
+            Cortex Agent
+                   │
+                   ▼
+       Snowflake Intelligence
+     (natural language querying)
 ```
 
 ## How It Works

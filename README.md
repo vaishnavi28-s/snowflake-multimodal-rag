@@ -73,7 +73,7 @@ Every document type goes through two stages: **parsing** (extracting content fro
 
 ### Functions called per document type
 
-Rates from Table 6(a) and 6(g) of the [Snowflake Service Consumption Table](https://www.snowflake.com/legal-files/CreditConsumptionTable.pdf) (effective May 12, 2026). All rates are in AI Credits.
+Rates from Table 6(a) and 6(g) of the [Snowflake Service Consumption Table](https://www.snowflake.com/legal-files/CreditConsumptionTable.pdf) . All rates are in AI Credits.
 
 | Function | TXT / MD | Digital PDF | Scanned PDF | Mixed PDF | Official Rate |
 |---|---|---|---|---|---|

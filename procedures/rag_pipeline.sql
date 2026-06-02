@@ -79,7 +79,7 @@ def classify_layout_content(layout_content):
 def insert_parse_doc(session, fname, doc_page_key, page_number, stage_prefix, text, doc_type):
     """
     Parameterised insert for large document text.
-    Avoids SQL compiler limits on inline string literals.
+    
     """
     truncated = text[:50000]
     session.sql(
@@ -102,8 +102,7 @@ def insert_image_vector(session, fname, doc_page_key, page_number, idx, stage_pr
     Insert image embedding vector into VM3_VECTORS.
 
     img_vector is a Python list of floats returned by AI_EMBED via Snowpark.
-    We JSON-serialise it and pass as a bind parameter, then cast to
-    VECTOR(FLOAT, 1024) inside SQL -- avoids f-string injection of huge arrays.
+
     """
     vector_json = json.dumps(img_vector)
     session.sql(

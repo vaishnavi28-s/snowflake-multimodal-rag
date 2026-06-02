@@ -97,7 +97,7 @@ One LAYOUT parse call plus one embedding. The dominant cost is the LAYOUT call a
 Two parse calls. LAYOUT to detect the document is scanned, then OCR to extract the text plus one embedding. Combined parse cost is (3.66 + 0.68) = 4.34 AI Credits per 1,000 pages. A 10-page scanned document costs 0.0434 AI Credits (~$0.09).
 
 **Mixed PDF**
-Two LAYOUT calls plus one embedding for text, and one `AI_EMBED voyage-multimodal-3` call per image for image vectors. The LAYOUT calls cost 2 × 3.66 = 7.32 AI Credits per 1,000 pages. Image embedding adds 0.06 AI Credits per 1M tokens per image, which is minimal. Page count is the dominant cost driver. A 94-page document with 31 images costs approximately 0.69 AI Credits (~$1.38).
+Two LAYOUT calls plus one embedding for text, and one `AI_EMBED voyage-multimodal-3` call per image for image vectors. The LAYOUT calls cost 2 × 3.66 = 7.32 AI Credits per 1,000 pages. Image embedding adds 0.06 AI Credits per 1M tokens per image, which is minimal. Page count is the dominant cost driver. A 94-page document with 31 images costs approximately 0.69 AI Credits (~$1.38) for document parsing alone. Image embedding via voyage-multimodal-3 adds additional cost based on image token count, which varies by image size
 
 ## Running the Pipeline
 

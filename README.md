@@ -2,16 +2,50 @@
 
 End-to-end document ingestion and search pipeline running entirely inside Snowflake. Supports PDFs (digital, scanned, mixed), markdown, and text files. Automatically classifies each document and routes it through the correct parsing and embedding path.
 
-## How It Works
+## Pipeline
 
-Files dropped into an internal stage are picked up by a stored procedure that classifies and processes each one:
+```
+┌──────────────────────────────────────────────────────┐
+│                   Internal Stage                     │
+│                  (RAG_INTERNAL)                      │
+└───────────────────────┬──────────────────────────────┘
+                        │
+                        ▼
+┌──────────────────────────────────────────────────────┐
+│               RUN_RAG_PIPELINE()                     │
+│           File Discovery + Classification            │
+└───────┬───────────────┬──────────────┬───────────────┘
+        │               │              │               │
+        ▼               ▼              ▼               ▼
+     TXT/MD        Digital PDF    Scanned PDF      Mixed PDF
+     Read          1x LAYOUT      1x LAYOUT        2x LAYOUT
+     directly      reused         + 1x OCR         + AI_EMBED
+                                                   per image
+        │               │              │               │
+        └───────────────┴──────────────┴───────────────┘
+                                │
+                                ▼
+                        EMBED_TEXT_768
+                   (snowflake-arctic-embed-m-v1.5)
+                                │
+                   ┌────────────┴────────────┐
+                   ▼                         ▼
+         DEMO_SEC_JOINED_DATA       DEMO_SEC_VM3_VECTORS
+         (text + 768-dim vectors)   (images + 1024-dim vectors)
+                   │
+                   ▼
+         Cortex Search Service
+       (hybrid keyword + semantic)
+```
+
+## How It Works
 
 - **TXT / MD** — read directly, embedded with `EMBED_TEXT_768`
 - **Digital PDF** — parsed with `PARSE_DOCUMENT LAYOUT`, embedded with `EMBED_TEXT_768`
 - **Scanned PDF** — `PARSE_DOCUMENT LAYOUT` detects no text, falls back to `OCR`, embedded with `EMBED_TEXT_768`
-- **Mixed PDF** — `PARSE_DOCUMENT LAYOUT` detects embedded images via markdown image refs, re-parsed with `extract_images:true`, text embedded with `EMBED_TEXT_768`, images embedded with `AI_EMBED voyage-multimodal-3` and stored separately in a vector table
+- **Mixed PDF** — `PARSE_DOCUMENT LAYOUT` detects embedded images via markdown image refs, re-parsed with `extract_images:true`, text embedded with `EMBED_TEXT_768`, images embedded with `AI_EMBED voyage-multimodal-3` and stored separately in `DEMO_SEC_VM3_VECTORS`
 
-Text embeddings feed into a Cortex Search Service for hybrid keyword + semantic search. Image embeddings are stored in `DEMO_SEC_VM3_VECTORS` for multimodal retrieval.
+`extract_images:true` on the second LAYOUT call has no additional cost per Snowflake documentation.
 
 ## Cost Per Document Type
 
@@ -24,7 +58,7 @@ Rates from the [Snowflake Service Consumption Table](https://www.snowflake.com/l
 | Scanned PDF (10 pages) | 1× `PARSE_DOCUMENT LAYOUT` + 1× `PARSE_DOCUMENT OCR` + `EMBED_TEXT_768` | ~0.038 | ~$0.077 |
 | Mixed PDF (94 pages, 31 images) | 2× `PARSE_DOCUMENT LAYOUT` + 31× `AI_EMBED` + `EMBED_TEXT_768` | ~0.314 | ~$0.628 |
 
-`extract_images:true` on the second LAYOUT call has no additional cost per Snowflake documentation. Page count is the dominant cost driver — image count adds very little.
+Page count is the dominant cost driver. Image count adds very little due to the low `AI_EMBED` rate.
 
 ## Running the Pipeline
 
@@ -35,34 +69,28 @@ snowsql -c <connection> -q "PUT file://path/to/file.pdf @RAG.PUBLIC.RAG_INTERNAL
 snowsql -c <connection> -q "CALL RAG.PUBLIC.RUN_RAG_PIPELINE();"
 ```
 
-The procedure returns a structured log showing classification and processing results for each file.
+The procedure returns a structured log showing classification and processing results for each file:
 
-## Checking Costs
-
-```sql
-SELECT
-    FUNCTION_NAME,
-    MODEL_NAME,
-    SUM(TOKEN_CREDITS)                  AS CREDITS,
-    ROUND(SUM(TOKEN_CREDITS) * 2.00, 4) AS COST_USD,
-    SUM(TOKENS)                         AS TOTAL_TOKENS
-FROM SNOWFLAKE.ACCOUNT_USAGE.CORTEX_FUNCTIONS_USAGE_HISTORY
-WHERE START_TIME >= DATEADD('day', -1, CURRENT_TIMESTAMP())
-GROUP BY 1, 2
-ORDER BY CREDITS DESC;
 ```
-
-Note: `ACCOUNT_USAGE` views have up to a 3-hour lag. For live spend, go to Snowsight → Admin → Cost Management → Consumption → Service Type: AI Services.
+[1/6] 1 new file(s) queued
+[2/6] 1 file(s) ready
+[3/6] Catalog updated
+  document.pdf: text_len=220033, has_images=True
+  document.pdf: 31 image vector(s) stored
+[4d/6] 1 mixed PDF(s) processed with extract_images + AI_EMBED
+[4/6] All files classified and parsed
+[5/6] JOINED_DATA built -- embeddings complete
+[6/6] Cortex Search Service recreated -- agent updated
+```
 
 ## Setup
 
-Requires Snowflake with Cortex AI enabled, an internal stage at `RAG.PUBLIC.RAG_INTERNAL`, and a warehouse named `ML_WH`. Deploy the procedure from `sql/procedures/rag_pipeline.sql`:
+Requires Snowflake with Cortex AI enabled, an internal stage at `RAG.PUBLIC.RAG_INTERNAL`, and a warehouse named `ML_WH`. Create all tables first using `build.sql`, then deploy the procedure:
 
 ```bash
-snowsql -c <connection> -f sql/procedures/rag_pipeline.sql
+snowsql -c <connection> -f build.sql
+snowsql -c <connection> -f procedures/rag_pipeline.sql
 ```
-
-Table definitions are in `sql/stages/build.sql`.
 
 ## Stack
 

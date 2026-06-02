@@ -61,7 +61,7 @@ Every document type goes through two stages: **parsing** (extracting content fro
 
 ### Why each feature is used
 
-**`AI_PARSE_DOCUMENT LAYOUT`** is called on every PDF. It reads the document structure and extracts text. For digital PDFs this is the only parse call needed. For mixed PDFs it is called twice — once to detect that images are present, and again with `extract_images:true` to retrieve the actual image bytes. The second call has no additional cost.
+**`AI_PARSE_DOCUMENT LAYOUT`** is called on every PDF. It reads the document structure and extracts text. For digital PDFs this is the only parse call needed. For mixed PDFs it is called twice, once to detect that images are present, and again with `extract_images:true` to retrieve the actual image bytes. The second call has no additional cost.
 
 **`AI_PARSE_DOCUMENT OCR`** is only called on scanned PDFs. When LAYOUT returns no meaningful text (below 50 characters), the pipeline concludes the document is image-based and falls back to OCR to extract the text.
 

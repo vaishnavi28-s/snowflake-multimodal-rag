@@ -73,7 +73,7 @@ Every document type goes through two stages: **parsing** (extracting content fro
 
 ### Functions called per document type
 
-Rates from Table 6(a) and 6(g) of the [Snowflake Service Consumption Table](https://www.snowflake.com/legal-files/CreditConsumptionTable.pdf) . All rates are in AI Credits.
+Rates from Table 6(a) and 6(g) of the [Snowflake Service Consumption Table](https://www.snowflake.com/legal-files/CreditConsumptionTable.pdf)  All rates are in AI Credits.
 
 | Function | TXT / MD | Digital PDF | Scanned PDF | Mixed PDF | Official Rate |
 |---|---|---|---|---|---|
@@ -83,7 +83,7 @@ Rates from Table 6(a) and 6(g) of the [Snowflake Service Consumption Table](http
 | `AI_EMBED` `snowflake-arctic-embed-m-v1.5` | 1× | 1× | 1× | 1× | 0.03 AI Credits / 1M tokens |
 | `AI_EMBED` `voyage-multimodal-3` | 0× | 0× | 0× | 1× per image | 0.06 AI Credits / 1M tokens |
 
-1 AI Credit = $2.00 USD (Global, On Demand). Each document page = 970 tokens for token-based billing.
+1 AI Credit = $2.00 USD (Global, On Demand). 
 
 ### Cost summary per document type
 
@@ -97,7 +97,7 @@ One LAYOUT parse call plus one embedding. The dominant cost is the LAYOUT call a
 Two parse calls. LAYOUT to detect the document is scanned, then OCR to extract the text plus one embedding. Combined parse cost is (3.66 + 0.68) = 4.34 AI Credits per 1,000 pages. A 10-page scanned document costs 0.0434 AI Credits (~$0.09).
 
 **Mixed PDF**
-Two LAYOUT calls plus one embedding for text, and one `AI_EMBED voyage-multimodal-3` call per image for image vectors. The LAYOUT calls cost 2 × 3.66 = 7.32 AI Credits per 1,000 pages. Image embedding adds 0.06 AI Credits per 1M tokens per image, which is minimal. Page count is the dominant cost driver. A 94-page document with 31 images costs approximately 0.69 AI Credits (~$1.38) for document parsing alone. Image embedding via voyage-multimodal-3 adds additional cost based on image token count, which varies by image size
+Two LAYOUT calls plus one embedding for text, and one `AI_EMBED voyage-multimodal-3` call per image for image vectors. The LAYOUT calls cost 2 × 3.66 = 7.32 AI Credits per 1,000 pages. Image embedding adds 0.06 AI Credits per 1M tokens per image, which is minimal. Page count is the dominant cost driver. A 94-page document with 31 images costs approximately 0.69 AI Credits (~$1.38) for document parsing alone. Image embedding via voyage-multimodal-3 adds additional cost based on image token count, which varies by image size and tokenization.
 
 ## Running the Pipeline
 

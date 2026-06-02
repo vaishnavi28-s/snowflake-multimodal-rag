@@ -1,0 +1,16 @@
+
+-- TABLE: DEMO_SEC_JOINED_DATA
+-- Final table - vector + text + metadata per page
+-- Fed into Cortex Search Service
+
+
+CREATE TABLE IF NOT EXISTS RAG.PUBLIC.DEMO_SEC_JOINED_DATA (
+    FILE_NAME      VARCHAR             NOT NULL,
+    PAGE_NUMBER    INTEGER             NOT NULL,
+    VECTOR_MAIN    VECTOR(FLOAT, 1024),
+    TEXT           VARIANT,
+    IMAGE_FILEPATH VARCHAR             NOT NULL,
+    SOURCE_DOC     VARCHAR,
+    UPDATED_AT     TIMESTAMP_NTZ       NOT NULL DEFAULT CURRENT_TIMESTAMP(),
+    CONSTRAINT PK_JOINED PRIMARY KEY (FILE_NAME)
+);
